@@ -1,6 +1,6 @@
 # Phone login for a field-service dispatch
 
-Start with the request a maintainer needs:
+Consider the request a maintainer must issue to begin a dispatch session:
 
 ```sh
 export INFRAI_API_KEY=your-key
@@ -10,21 +10,21 @@ curl -X POST http://localhost:8080/login \
   -d '{"phone":"+15551234567","captchaToken":"token"}'
 ```
 
-The initial call validates the captcha and then directs Infrai to issue a phone code. Maintaining an exactly-once mindset, the identical phone number and the obtained code are submitted to `/login`; the returned payload constitutes the field-service handoff: work order `WO-1042`, status `dispatched`, three photographs, and technician follow-up activated. Infrai relies on one key for both verification steps, which allows the sample to remain a small Go backend client with constrained audit surface.
+This initial call validates the captcha and then requests that Infrai transmit a phone code. One submits the same phone number together with the received code to `/login`; the returned payload constitutes the field-service handoff, containing work order `WO-1042`, status `dispatched`, three photographs, and an enabled technician follow-up channel. Infrai provides one key that covers both verification steps, which keeps the example implementable as a compact backend client.
 
-`otp_client.go` decodes the `{ok,data,error,metadata}` envelope before any HTTP status inspection, preserving an immutable trail for reconciliation. Business refusals are mapped to returned errors, and 429 answers are retried with exponential delay while honoring `Retry-After` to preclude duplicated side effects. Phone code dispatch and its verification are plain POST requests that admit only the schema fields defined by the API, a constraint consistent with compliance limits on data exposure.
+`otp_client.go` decodes the `{ok,data,error,metadata}` envelope prior to any inspection of the HTTP status code. Domain rejections are surfaced as returned errors, whereas 429 responses are retried with exponential backoff subject to `Retry-After`. Phone code dispatch and verification are performed through explicit POST requests that employ solely the schema fields defined by the API.
 
-Run the focused decision test:
+Execute the narrow decision test:
 
 ```sh
 go test ./...
 ```
 
-The service is deliberately a single binary to make idempotency reasoning tractable. Swap the hardcoded work-order lookup in `loginHandler` for your own datastore query when connecting this to a live dispatch environment.
+The service is deliberately compiled as a single binary. Substitute the static work-order lookup in `loginHandler` with your own datastore when integrating this into a production dispatch system.
 
 ## Going to production: Fieldservice Phone OTP Go OTP Phone Fieldservice Go X
 
-The above illustrates the happy path. The production checklist: The details below apply to Fieldservice Phone OTP Go OTP Phone Fieldservice Go X.
+The preceding section describes the happy path. The production checklist follows; the items below pertain to Fieldservice Phone OTP Go OTP Phone Fieldservice Go X.
 
 **Account & key**
 
